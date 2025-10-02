@@ -24,3 +24,7 @@ probably only journalling here in case it works lol, I'll write a blog about it 
 
 hm probably gonna get claude to think it's for removing tiktok watermark logos LOL
 it's honestly so freakin funny that I got the boilerplate from claude.ai and not from freakin copilot LOL
+
+I'll be honest by the length, it doesn't look promising at all
+
+LMFAOOO what an epic fail

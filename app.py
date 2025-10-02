@@ -102,7 +102,7 @@ def remove_teleporting_watermark(input_video, output_video, sample_frames=30):
 
 # Usage
 if __name__ == "__main__":
-    input_file = "tiktok_video.mp4"  # Your TikTok video
+    input_file = "video.mp4"  # Your TikTok video
     output_file = "no_watermark.mp4"  # Clean output
     
     # Process the video
