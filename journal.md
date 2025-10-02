@@ -57,3 +57,14 @@ sidenote: claude 4.5 is insane holy shit
 hm why not let's just use gradio code, run it on spaces
 
 just sucks, I'm gonna lock in and stop blogging for a while, brb with an update
+
+LOL what if I name it literally sweeta
+TODO
+
+hm we're using temporal median filtering and a light inpainting model now, letseee
+
+hoping and praying to god this doesn't make my laptop explode although it's like 200m afaik
+LOL I should probs start studying side by side so I can pass tomorrow (1:15 AM)
+
+hmm tweaked heavily, this better work honestly, looks promising
+welp did absolutely nothing

@@ -1,2 +1,5 @@
+gradio
 opencv-python 
 numpy
+pillow
+simple-lama-inpainting
