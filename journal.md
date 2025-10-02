@@ -1,3 +1,4 @@
+## Microblogging because why not
 ### 3 Oct 2025 - 12:40 AM IST
 
 I've been seeing Twitter for the past 2 days and it's way wayy too full with Sora stuff
@@ -68,3 +69,18 @@ LOL I should probs start studying side by side so I can pass tomorrow (1:15 AM)
 
 hmm tweaked heavily, this better work honestly, looks promising
 welp did absolutely nothing
+
+> "it took a long time to process it, gave an output but it is exactly 1:1 the same, the watermark wasn't removed 
+
+> for context, this is what the watermark looks like (Refer image) the star-shape is somewhat animated and it keeps changing where it's at randomly (like tiktok's watermark) and is with the text "sora", this pops up at random places - corners, centers etc
+
+> find the best possible solution to remove it and run on hugging face spaces"
+
+
+okay running this 
+dang been 10 mins 
+
+*sighs*
+so done with this rn
+
+probably gonna study for a bit and come back or do this tomorrow.

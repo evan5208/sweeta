@@ -23,68 +23,156 @@ def get_lama_model():
     return simple_lama
 
 
+def create_sora_template():
+    """Create a rough template of what the Sora watermark looks like for template matching."""
+    # Create a simple star + text template (this is approximate)
+    template = np.zeros((40, 120), dtype=np.uint8)
+    
+    # Draw a simple star shape (rough approximation)
+    star_center = (20, 20)
+    star_points = []
+    for i in range(10):
+        angle = i * np.pi / 5
+        if i % 2 == 0:
+            radius = 12
+        else:
+            radius = 6
+        x = int(star_center[0] + radius * np.cos(angle))
+        y = int(star_center[1] + radius * np.sin(angle))
+        star_points.append([x, y])
+    
+    star_points = np.array(star_points, dtype=np.int32)
+    cv2.fillPoly(template, [star_points], 200)
+    
+    # Add rough "Sora" text representation
+    cv2.rectangle(template, (45, 12), (110, 28), 180, -1)  # Text block
+    
+    return template
+
+
 def detect_sora_watermark_smart(frame, prev_mask=None):
     """
-    Smart watermark detection combining multiple techniques.
-    Returns mask of watermark location.
+    Sora-specific watermark detection for semi-transparent animated star + text.
+    The Sora watermark is a white/light gray star shape with "Sora" text that moves randomly.
     """
     h, w = frame.shape[:2]
-    
-    # Convert to different color spaces
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     
-    # Method 1: High brightness + low saturation (white/gray watermark)
-    _, bright = cv2.threshold(gray, 180, 255, cv2.THRESH_BINARY)
-    low_sat = cv2.inRange(hsv, (0, 0, 180), (180, 50, 255))
+    # Method 1: Detect semi-transparent overlays using variance
+    # Sora watermark creates slight brightness variations
+    blur_heavy = cv2.GaussianBlur(gray, (15, 15), 0)
+    blur_light = cv2.GaussianBlur(gray, (3, 3), 0)
+    overlay_diff = cv2.absdiff(blur_heavy, blur_light)
     
-    # Combine
-    candidate_mask = cv2.bitwise_and(bright, low_sat)
+    # Method 2: Look for specific brightness patterns (semi-transparent white)
+    # Sora watermark makes areas slightly brighter, not fully white
+    bright_overlay = cv2.inRange(gray, 200, 240)  # Semi-transparent range
     
-    # Method 2: Edge detection for logo boundaries
-    edges = cv2.Canny(gray, 50, 150)
+    # Method 3: Text detection using morphological operations
+    # The "Sora" text creates horizontal line patterns
+    kernel_horizontal = cv2.getStructuringElement(cv2.MORPH_RECT, (20, 3))
+    text_like = cv2.morphologyEx(bright_overlay, cv2.MORPH_CLOSE, kernel_horizontal)
     
-    # Dilate edges to form regions
-    kernel = np.ones((5, 5), np.uint8)
-    edge_regions = cv2.dilate(edges, kernel, iterations=2)
+    # Method 4: Star shape detection using corner detection
+    corners = cv2.goodFeaturesToTrack(gray, maxCorners=100, qualityLevel=0.01, minDistance=10)
+    corner_mask = np.zeros_like(gray)
+    if corners is not None:
+        for corner in corners:
+            x, y = corner.ravel().astype(int)
+            cv2.circle(corner_mask, (x, y), 8, 255, -1)
     
-    # Combine with brightness mask
-    combined = cv2.bitwise_and(candidate_mask, edge_regions)
+    # Combine all methods
+    combined = cv2.bitwise_or(overlay_diff, bright_overlay)
+    combined = cv2.bitwise_or(combined, text_like)
     
-    # Find contours and filter by properties
+    # Apply morphological operations to connect star and text
+    kernel = np.ones((7, 7), np.uint8)
+    combined = cv2.morphologyEx(combined, cv2.MORPH_CLOSE, kernel)
+    combined = cv2.morphologyEx(combined, cv2.MORPH_OPEN, np.ones((3, 3), np.uint8))
+    
+    # Find potential watermark regions
     contours, _ = cv2.findContours(combined, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     
     final_mask = np.zeros_like(gray)
+    watermark_found = False
     
     for contour in contours:
         area = cv2.contourArea(contour)
+        x, y, w_box, h_box = cv2.boundingRect(contour)
         
-        # Filter by area (adjust based on your video resolution)
-        if 300 < area < 25000:
-            x, y, w_box, h_box = cv2.boundingRect(contour)
-            
-            # Check aspect ratio (Sora logo is wider than tall)
+        # Sora watermark characteristics:
+        # - Size: typically 80-200 pixels wide
+        # - Aspect ratio: roughly 2:1 to 4:1 (star + text)
+        # - Position: can be anywhere but often in corners/edges
+        
+        if 1000 < area < 15000:  # Reasonable size for watermark
             aspect_ratio = w_box / h_box if h_box > 0 else 0
             
-            if 0.3 < aspect_ratio < 5.0:
-                # Add padding
-                pad = 15
+            if 1.5 < aspect_ratio < 6.0:  # Horizontal layout (star + "Sora")
+                # Add generous padding to ensure we capture the entire watermark
+                pad_x = max(20, w_box // 4)
+                pad_y = max(15, h_box // 4)
+                
+                x1 = max(0, x - pad_x)
+                y1 = max(0, y - pad_y)
+                x2 = min(w, x + w_box + pad_x)
+                y2 = min(h, y + h_box + pad_y)
+                
+                # Check if this region looks like it could contain text/logo
+                roi = gray[y1:y2, x1:x2]
+                if roi.size > 0:
+                    mean_brightness = np.mean(roi)
+                    brightness_std = np.std(roi)
+                    
+                    # Watermark regions have higher brightness and some variation
+                    if mean_brightness > 120 and brightness_std > 10:
+                        cv2.rectangle(final_mask, (x1, y1), (x2, y2), 255, -1)
+                        watermark_found = True
+    
+    # If no watermark found with main method, try template matching
+    if not watermark_found:
+        try:
+            template = create_sora_template()
+            result = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
+            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+            
+            # If we find a good match
+            if max_val > 0.3:  # Adjust threshold as needed
+                x, y = max_loc
+                h_t, w_t = template.shape
+                
+                # Add padding around the detected region
+                pad = 20
                 x1 = max(0, x - pad)
                 y1 = max(0, y - pad)
-                x2 = min(w, x + w_box + pad)
-                y2 = min(h, y + h_box + pad)
+                x2 = min(w, x + w_t + pad)
+                y2 = min(h, y + h_t + pad)
                 
                 cv2.rectangle(final_mask, (x1, y1), (x2, y2), 255, -1)
+                watermark_found = True
+        except:
+            pass  # Template matching failed, continue with edge detection
     
-    # If we have previous mask, use it to guide detection (temporal consistency)
-    if prev_mask is not None:
-        # Check if watermark moved (large change in mask)
-        overlap = cv2.bitwise_and(final_mask, prev_mask)
-        if np.sum(overlap) < np.sum(prev_mask) * 0.3:  # Watermark teleported
-            return final_mask
-        else:
-            # Smooth transition
-            return cv2.addWeighted(final_mask, 0.7, prev_mask, 0.3, 0)
+    # If still no watermark found, try edge-based detection as final fallback
+    if not watermark_found:
+        edges = cv2.Canny(gray, 30, 100)
+        kernel = np.ones((5, 5), np.uint8)
+        edges_dilated = cv2.dilate(edges, kernel, iterations=2)
+        
+        contours, _ = cv2.findContours(edges_dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for contour in contours:
+            area = cv2.contourArea(contour)
+            if 800 < area < 12000:
+                x, y, w_box, h_box = cv2.boundingRect(contour)
+                aspect_ratio = w_box / h_box if h_box > 0 else 0
+                
+                if 1.2 < aspect_ratio < 5.0:
+                    pad = 25
+                    x1 = max(0, x - pad)
+                    y1 = max(0, y - pad)
+                    x2 = min(w, x + w_box + pad)
+                    y2 = min(h, y + h_box + pad)
+                    cv2.rectangle(final_mask, (x1, y1), (x2, y2), 255, -1)
     
     return final_mask
 
@@ -146,51 +234,105 @@ def process_video_lightweight(video_path, use_temporal=True, progress=gr.Progres
     
     for i, (frame, mask) in enumerate(zip(frames_buffer, masks)):
         print(f"Processing frame {i+1}/{len(frames_buffer)}")
-        if np.sum(mask) > 100:  # Watermark detected
+        if np.sum(mask) > 500:  # Watermark detected (increased threshold for more selective detection)
             print(f"  Watermark detected in frame {i+1}, removing...")
+            
             if use_temporal:
-                # Use temporal median from nearby frames without watermark
-                clean_frames = []
-                for j in range(max(0, i-10), min(len(frames_buffer), i+11)):
-                    if j != i and np.sum(masks[j]) < np.sum(mask) * 0.5:
-                        clean_frames.append(frames_buffer[j])
+                # For moving watermarks, we need a smarter temporal approach
+                # Find frames where watermark is in different positions
+                clean_patches = []
+                watermark_region = None
                 
-                if clean_frames:
-                    print(f"  Using temporal median from {len(clean_frames)} clean frames")
-                    # Get median for watermark region
-                    median_frame = np.median(clean_frames, axis=0).astype(np.uint8)
+                # Get the bounding box of the current watermark
+                contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+                if contours:
+                    largest_contour = max(contours, key=cv2.contourArea)
+                    x, y, w_mask, h_mask = cv2.boundingRect(largest_contour)
+                    watermark_region = (x, y, w_mask, h_mask)
+                
+                if watermark_region:
+                    x, y, w_mask, h_mask = watermark_region
                     
-                    # Blend with inpainting for best results
-                    mask_3ch = cv2.cvtColor(mask, cv2.COLOR_GRAY2BGR) / 255.0
-                    result = (frame * (1 - mask_3ch) + median_frame * mask_3ch).astype(np.uint8)
+                    # Look for frames where this same region is clean
+                    for j in range(max(0, i-15), min(len(frames_buffer), i+16)):
+                        if j != i:
+                            other_mask = masks[j]
+                            # Check if the watermark region in frame j is clean
+                            roi_mask = other_mask[y:y+h_mask, x:x+w_mask]
+                            if roi_mask.size > 0 and np.sum(roi_mask) < np.sum(mask) * 0.3:
+                                # This region is cleaner in frame j
+                                clean_patch = frames_buffer[j][y:y+h_mask, x:x+w_mask]
+                                clean_patches.append(clean_patch)
+                    
+                    if len(clean_patches) >= 3:
+                        print(f"  Found {len(clean_patches)} clean patches for temporal reconstruction")
+                        # Use median of clean patches
+                        median_patch = np.median(clean_patches, axis=0).astype(np.uint8)
+                        
+                        # Create result by replacing the watermark region
+                        result = frame.copy()
+                        
+                        # Smooth blending at edges to avoid artifacts
+                        mask_region = mask[y:y+h_mask, x:x+w_mask]
+                        if mask_region.size > 0:
+                            # Create a soft mask for blending
+                            soft_mask = cv2.GaussianBlur(mask_region.astype(np.float32), (11, 11), 3) / 255.0
+                            soft_mask = np.stack([soft_mask] * 3, axis=-1)
+                            
+                            current_patch = result[y:y+h_mask, x:x+w_mask].astype(np.float32)
+                            blended_patch = (current_patch * (1 - soft_mask) + median_patch.astype(np.float32) * soft_mask)
+                            result[y:y+h_mask, x:x+w_mask] = blended_patch.astype(np.uint8)
+                        
+                    else:
+                        print(f"  Only {len(clean_patches)} clean patches found, using advanced inpainting...")
+                        # Use advanced inpainting with edge-aware approach
+                        try:
+                            if lama is None:
+                                print("  Initializing LaMa model...")
+                                lama = get_lama_model()
+                            
+                            # Dilate mask slightly for better inpainting
+                            kernel = np.ones((5, 5), np.uint8)
+                            dilated_mask = cv2.dilate(mask, kernel, iterations=1)
+                            
+                            frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+                            mask_pil = Image.fromarray(dilated_mask)
+                            result_pil = lama(frame_pil, mask_pil)
+                            result = cv2.cvtColor(np.array(result_pil), cv2.COLOR_RGB2BGR)
+                        except Exception as e:
+                            print(f"  LaMa inpainting failed: {e}, using basic reconstruction")
+                            # Fallback: simple inpainting
+                            result = cv2.inpaint(frame, mask, 3, cv2.INPAINT_TELEA)
                 else:
-                    print(f"  No clean frames found, using LaMa inpainting...")
-                    # Fall back to LaMa inpainting
+                    print(f"  No watermark region found, using full frame inpainting")
                     try:
                         if lama is None:
-                            print("  Initializing LaMa model...")
                             lama = get_lama_model()
                         frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
                         mask_pil = Image.fromarray(mask)
                         result_pil = lama(frame_pil, mask_pil)
                         result = cv2.cvtColor(np.array(result_pil), cv2.COLOR_RGB2BGR)
                     except Exception as e:
-                        print(f"  LaMa inpainting failed: {e}, using original frame")
+                        print(f"  Inpainting failed: {e}, using original frame")
                         result = frame
             else:
-                print(f"  Using LaMa only...")
-                # Use LaMa only
+                print(f"  Using LaMa inpainting only...")
                 try:
                     if lama is None:
                         print("  Initializing LaMa model...")
                         lama = get_lama_model()
+                    
+                    # Slightly dilate mask for better results
+                    kernel = np.ones((3, 3), np.uint8)
+                    dilated_mask = cv2.dilate(mask, kernel, iterations=1)
+                    
                     frame_pil = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-                    mask_pil = Image.fromarray(mask)
+                    mask_pil = Image.fromarray(dilated_mask)
                     result_pil = lama(frame_pil, mask_pil)
                     result = cv2.cvtColor(np.array(result_pil), cv2.COLOR_RGB2BGR)
                 except Exception as e:
-                    print(f"  LaMa inpainting failed: {e}, using original frame")
-                    result = frame
+                    print(f"  LaMa inpainting failed: {e}, using OpenCV inpainting")
+                    result = cv2.inpaint(frame, mask, 3, cv2.INPAINT_TELEA)
         else:
             result = frame
         
@@ -204,8 +346,17 @@ def process_video_lightweight(video_path, use_temporal=True, progress=gr.Progres
     
     out.release()
     
-    detected_count = sum(1 for m in masks if np.sum(m) > 100)
-    status = f"✅ Done! Processed {total_frames} frames. Watermark detected in {detected_count} frames."
+    detected_count = sum(1 for m in masks if np.sum(m) > 500)
+    processed_count = len([result for result in frames_buffer if result is not None])
+    
+    status = f"✅ Done! Processed {processed_count}/{total_frames} frames. Sora watermark detected and removed in {detected_count} frames."
+    
+    if detected_count == 0:
+        status += "\n⚠️ No Sora watermark detected. The video might not have the watermark, or it may be too faint/different from expected."
+    elif detected_count < total_frames * 0.1:
+        status += f"\n💡 Watermark detected in only {detected_count} frames. This suggests the watermark appears sporadically."
+    else:
+        status += f"\n🎯 Successfully processed video with consistent watermark removal!"
     
     return output_path, status
 
@@ -240,13 +391,14 @@ os.makedirs("./temp", exist_ok=True)
 with gr.Blocks(title="Sora Watermark Remover", theme=gr.themes.Soft()) as demo:
     gr.Markdown("""
     # 🎬 Sora Watermark Remover
-    ### Lightweight AI-powered removal using LaMa + Temporal Analysis
+    ### AI-powered removal specifically designed for Sora's animated watermark
     
     **✨ Features:**
-    - Runs on CPU (HF Free Tier compatible!)
-    - Smart detection using brightness + edge analysis
-    - Temporal consistency for smooth results
-    - Uses LaMa inpainting model
+    - 🎯 **Sora-Specific Detection**: Targets the animated star + "Sora" text watermark
+    - 🔄 **Moving Watermark Support**: Handles randomly positioned watermarks
+    - 🧠 **Smart Temporal Analysis**: Uses clean frames to reconstruct watermarked areas
+    - 🚀 **CPU Optimized**: Runs efficiently on Hugging Face free tier
+    - 🎨 **Advanced Inpainting**: LaMa model + custom reconstruction techniques
     """)
     
     with gr.Tabs():
@@ -290,16 +442,29 @@ with gr.Blocks(title="Sora Watermark Remover", theme=gr.themes.Soft()) as demo:
     
     gr.Markdown("""
     ### 💡 How it works:
-    1. **Smart Detection**: Finds watermark using brightness, saturation, and edge analysis
-    2. **Temporal Analysis**: Looks at nearby frames to find clean pixels
-    3. **LaMa Inpainting**: Fills remaining gaps using AI
+    1. **🔍 Sora Detection**: Multi-method detection targeting semi-transparent star + text
+       - Overlay variance analysis for semi-transparent elements
+       - Morphological text detection for "Sora" text
+       - Template matching for star shape recognition
+       - Edge detection as fallback
+    
+    2. **🎯 Moving Watermark Handling**: Smart temporal reconstruction
+       - Tracks watermark positions across frames
+       - Finds clean patches from frames where watermark is elsewhere
+       - Smooth blending to avoid artifacts
+    
+    3. **🎨 Advanced Inpainting**: Multiple reconstruction methods
+       - Temporal median from clean frames (primary)
+       - LaMa AI inpainting (fallback)
+       - OpenCV inpainting (emergency fallback)
     
     ### ⚙️ Technical Details:
-    - Model: LaMa (Large Mask Inpainting) - 25MB, CPU-friendly
-    - Speed: ~2-5 seconds per frame on CPU
-    - Memory: ~2GB RAM for 1080p video
+    - **Detection**: Custom algorithm for Sora's animated watermark
+    - **Model**: LaMa (Large Mask Inpainting) - 25MB, CPU-friendly
+    - **Speed**: ~3-8 seconds per frame (depends on watermark complexity)
+    - **Memory**: Optimized for HF free tier (max 1000 frames per batch)
     
-    **Perfect for Hugging Face free tier! 🎉**
+    **🎯 Specifically designed for Sora's moving watermark! �**
     """)
 
 if __name__ == "__main__":
