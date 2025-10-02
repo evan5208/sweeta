@@ -28,3 +28,32 @@ it's honestly so freakin funny that I got the boilerplate from claude.ai and not
 I'll be honest by the length, it doesn't look promising at all
 
 LMFAOOO what an epic fail
+
+
+I bet there are some existing solutions we can learn from or tweak tho
+
+hm.
+
+#### Hugging Face Models/ Spaces search
+
+hm nothing that promising tbh
+
+this looks nice
+https://huggingface.co/collections/FBRonnie/watermark-removal-673cc512f6fdf7b1a2925d39
+
+hm not even close honestly
+
+I see a couple but they all exceed the 16gb memory, classic spaces problem
+
+this colab is fun
+https://colab.research.google.com/github/camenduru/text-to-video-synthesis-colab/blob/main/watermark_remover_gradio.ipynb
+
+build errors, I cba bro
+
+let's just clone this and see what's up and if we can tweak it ig
+https://huggingface.co/spaces/NeuralFalcon/Meta-Watermark-Remover-old
+
+sidenote: claude 4.5 is insane holy shit
+hm why not let's just use gradio code, run it on spaces
+
+just sucks, I'm gonna lock in and stop blogging for a while, brb with an update
