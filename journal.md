@@ -84,3 +84,16 @@ dang been 10 mins
 so done with this rn
 
 probably gonna study for a bit and come back or do this tomorrow.
+
+
+okay so apparently the videos have fixed positions where the logo appears always? lmao this is insane 
+
+watermark:
+  positions_landscape:
+    - [35, 585, 176, 638]
+    - [30, 68, 179, 118]
+    - [1112, 321, 1266, 367]
+  positions_portrait:
+    - [28, 1029, 175, 1091]
+    - [538, 604, 685, 657]
+    - [25, 79, 173, 136]

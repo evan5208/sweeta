@@ -1,5 +1,15 @@
-gradio
-opencv-python 
+# Core dependencies for SoraCleaner
+torch>=2.0.0
+torchvision>=0.15.0
 numpy
 pillow
-simple-lama-inpainting
+opencv-python
+matplotlib
+tqdm
+PyYAML
+
+# Gradio for web interface
+gradio>=4.0.0
+
+# Additional dependencies that might be needed
+ffmpeg-python
