@@ -16,6 +16,8 @@ parts/
 sdist/
 var/
 wheels/
+pip-wheel-metadata/
+share/python-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -24,15 +26,34 @@ MANIFEST
 # PyTorch
 *.pth
 *.pt
+*.ckpt
 
-# Virtual environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Video files
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
+
+# Image files
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+
+# Logs
+*.log
+logs/
 
 # IDE
 .vscode/
@@ -43,24 +64,27 @@ venv.bak/
 
 # OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
 
-# Temporary files
-*.tmp
-*.temp
-temp/
-tmp/
-
-# Video processing temp files
-*_frames/
-*_output.mp4
-output_*
-
 # Gradio
-flagged/
 gradio_cached_examples/
+flagged/
+
+# Model weights (except the required STTN model)
+# weights/*.pth
+# weights/*.pt
+
+# Environment
+.env
+.venv
+env/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Cache
+.cache/
+*.cache
+
+SoraCleaner

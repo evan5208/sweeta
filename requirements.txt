@@ -1,15 +1,11 @@
-# Core dependencies for SoraCleaner
+gradio>=4.0.0
 torch>=2.0.0
 torchvision>=0.15.0
-numpy
-pillow
-opencv-python
-matplotlib
-tqdm
-PyYAML
-
-# Gradio for web interface
-gradio>=4.0.0
-
-# Additional dependencies that might be needed
-ffmpeg-python
+opencv-python>=4.8.0
+numpy>=1.24.0
+Pillow>=10.0.0
+PyYAML>=6.0
+tqdm>=4.65.0
+av>=10.0.0
+basicsr>=1.4.2
+matplotlib>=3.7.0
