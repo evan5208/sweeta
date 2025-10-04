@@ -117,11 +117,16 @@ if [ "$ACTIVATE_ONLY" = true ]; then
 fi
 
 # Ensure required dependencies are installed
-pip list | grep -q PyQt6 || pip install PyQt6
-pip list | grep -q transformers || pip install transformers
-pip list | grep -q iopaint || pip install iopaint
-pip list | grep -q opencv-python-headless || pip install opencv-python-headless
+echo "Installing PyQt6, transformers, opencv-python-headless..."
+pip install PyQt6 transformers opencv-python-headless
 
+echo "Installing compatible huggingface-hub version..."
+pip install "huggingface-hub<0.20"
+
+echo "Installing iopaint..."
+pip install iopaint
+
+echo "Downloading LaMA model..."
 iopaint download --model lama
 
 # Run remwm.py with passed arguments

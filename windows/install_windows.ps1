@@ -54,9 +54,23 @@ $activateScript = Join-Path $condaExe "..\..\shell\condabin\conda-hook.ps1"
 conda activate py312aiwatermark
 
 Write-Host "Installing additional dependencies..." -ForegroundColor Cyan
-pip install PyQt6 transformers iopaint opencv-python-headless
+pip install PyQt6 transformers opencv-python-headless
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Error installing dependencies." -ForegroundColor Red
+    Read-Host -Prompt "Press Enter to exit"
+    exit 1
+}
+
+Write-Host "Installing compatible huggingface-hub version..." -ForegroundColor Cyan
+pip install "huggingface-hub<0.20"
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Warning: Error installing huggingface-hub." -ForegroundColor Yellow
+}
+
+Write-Host "Installing iopaint..." -ForegroundColor Cyan
+pip install iopaint
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Error installing iopaint." -ForegroundColor Red
     Read-Host -Prompt "Press Enter to exit"
     exit 1
 }

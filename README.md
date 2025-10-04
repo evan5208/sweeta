@@ -112,8 +112,19 @@ Access the Colab notebook from [here](https://colab.research.google.com/drive/14
 
 ```bash
 conda activate py312aiwatermark
-python remwm.py --input <input_path> --output <output_path> [options]
+python remwm.py <input_path> <output_path> [options]
 ```
+
+**Example:**
+```bash
+python remwm.py input_video.mp4 output_video.mp4 --max-bbox-percent 15 --force-format MP4 --transparent --overwrite
+```
+
+**Available options:**
+- `--max-bbox-percent`: Detection sensitivity (default: 10.0)
+- `--force-format`: Output format (PNG, WEBP, JPG, MP4, AVI)
+- `--transparent`: Make watermark areas transparent
+- `--overwrite`: Overwrite existing files
 
 ### Configuration Edit
 
@@ -128,6 +139,13 @@ Refer #ui.yml.example
    - **Output Format**: Choose PNG, WEBP, JPG, or keep original format
 
 ### Common Issues
+
+#### ImportError: cannot import name 'cached_download' from 'huggingface_hub'
+**Solution**: This is a version compatibility issue. The installation scripts now automatically install the correct version. If you installed manually, run:
+```bash
+pip install "huggingface-hub<0.20"
+pip install --upgrade iopaint
+```
 
 #### "Conda is not recognized as an internal or external command"
 **Solution**: Ensure Conda is properly installed and added to your system PATH environment variable.
@@ -185,8 +203,8 @@ Thanks to D-Ogi for the WatermarkRemover-AI model which was heavily modified for
 
 <div align="center">
 
-Made with ❤️ by [Kuber Mehta](https://kuber.studio/)
+Made with <3 by [Kuber Mehta](https://kuber.studio/)
 
-⭐ Star this repo if you found it cool
+Star this repo if you found it cool
 
 </div>

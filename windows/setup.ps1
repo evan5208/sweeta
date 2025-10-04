@@ -30,14 +30,14 @@ else {
 }
 
 # Ensure required dependencies are installed
-$packages = @("PyQt6", "transformers", "iopaint", "opencv-python-headless")
-foreach ($package in $packages) {
-    $installed = pip list | Select-String $package
-    if (-not $installed) {
-        Write-Host "Installing $package..."
-        pip install $package
-    }
-}
+Write-Host "Installing PyQt6, transformers, opencv-python-headless..."
+pip install PyQt6 transformers opencv-python-headless
+
+Write-Host "Installing compatible huggingface-hub version..."
+pip install "huggingface-hub<0.20"
+
+Write-Host "Installing iopaint..."
+pip install iopaint
 
 # Download the LaMA model
 Write-Host "Downloading the LaMA model..."

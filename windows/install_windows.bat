@@ -49,9 +49,23 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo Installing additional dependencies...
-pip install PyQt6 transformers iopaint opencv-python-headless
+pip install PyQt6 transformers opencv-python-headless
 if %ERRORLEVEL% NEQ 0 (
     echo Error installing dependencies.
+    pause
+    exit /b 1
+)
+
+echo Installing compatible huggingface-hub version...
+pip install "huggingface-hub<0.20"
+if %ERRORLEVEL% NEQ 0 (
+    echo Warning: Error installing huggingface-hub.
+)
+
+echo Installing iopaint...
+pip install iopaint
+if %ERRORLEVEL% NEQ 0 (
+    echo Error installing iopaint.
     pause
     exit /b 1
 )
