@@ -4,11 +4,15 @@
 
 ### Remove Watermarks from SORA 2 Video Generations
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-pink.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.12-pink.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-ba374a.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.12-ba374a.svg)](https://www.python.org/)
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/14Z0_QynK6P9GSCEDDEJT2Tiv_WXUyAfK?usp=sharing)
 
+<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/8347f5f1-49e3-47d7-a3f7-b5f3e390ee5b" />
+
 </div>
+
+## About
 
 SORA 2 is a State-of-the-art model by OpenAI and for the past few days, being on platforms like Instagram and Twitter, I've noticed how many non-technical people just assume the video is real despite the watermark.
 
