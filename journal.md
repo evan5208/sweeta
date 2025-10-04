@@ -103,3 +103,4 @@ DID CLAUDE FREAKING DELETE MY JOURNAL NOTES
 WHAT THE F
 
 dude so much happened this is just painful
+bruv f it I'm just gonna write a blog later ts is painful 🥀

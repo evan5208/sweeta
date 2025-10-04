@@ -1,0 +1,11 @@
+# Example configuration file for Sweeta GUI
+# Copy this file to ui.yml and modify with your paths
+
+force_format: None  # Options: None, png, webp, jpg
+input_path: ""      # Path to input image or folder
+max_bbox_percent: 100  # Maximum bounding box size as percentage (1-100)
+mode: single        # Options: single, batch
+output_path: ""     # Path to output folder
+overwrite: false    # Overwrite existing files
+transparent: false  # Make watermark area transparent
+

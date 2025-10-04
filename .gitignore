@@ -1,90 +1,38 @@
-# Python
+# User-specific configuration file
+ui.yml
+
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
 
-# PyTorch
-*.pth
-*.pt
-*.ckpt
-
-# Temporary files
-*.tmp
-*.temp
-temp/
-tmp/
-
-# Video files
-*.mp4
-*.avi
-*.mov
-*.mkv
-*.wmv
-*.flv
-*.webm
-
-# Image files
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.bmp
-*.tiff
-
-# Logs
-*.log
-logs/
+# Virtual environments
+venv/
+ENV/
+env/
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-*~
 
-# OS
+# OS files
 .DS_Store
 Thumbs.db
 
-# Gradio
-gradio_cached_examples/
-flagged/
+# Model weights and data
+weights/
+*.pth
+*.pt
+*.ckpt
 
-# Model weights (except the required STTN model)
-# weights/*.pth
-# weights/*.pt
+# Output files
+output/
+results/
 
-# Environment
-.env
-.venv
-env/
-venv/
+# Logs
+*.log
 
-# Jupyter
-.ipynb_checkpoints/
-
-# Cache
-.cache/
-*.cache
-
-SoraCleaner
