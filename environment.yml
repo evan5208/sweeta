@@ -15,5 +15,4 @@ dependencies:
   - pip:
       - --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu126
       - huggingface-hub==0.22.2
-      - diffusers
       - iopaint
