@@ -1,0 +1,5 @@
+gradio==4.44.0
+PyQt6
+transformers
+iopaint
+opencv-python-headless
